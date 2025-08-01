@@ -13,4 +13,5 @@ public interface ReactionRepository extends JpaRepository<Reaction, Long> {
     Optional<Reaction> findByPostIdAndUserId(Long postId, Long userId);
 
     List<Reaction> findAllByPostId(Long postId);
+
 }

@@ -7,7 +7,6 @@ import lombok.Data;
 import java.time.LocalDate;
 
 @Data
-@AllArgsConstructor // видалити потім
 public class UserDto {
 
     @NotNull(message = "Username cannot be empty.")

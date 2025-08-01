@@ -11,6 +11,11 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import jakarta.validation.constraints.*;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.catalina.core.ApplicationContext;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.validation.annotation.Validated;
@@ -32,7 +37,7 @@ public class UserService {
 
     public UserDto create(@Valid UserDto userCreateDto) {
         UserDto createdUser = userMapper.toDto(userRepository.save(userMapper.toEntity(userCreateDto)));
-        log.info("User {} created successfully", createdUser.getEmail());
+        log.info("User (ID: {}) created successfully.", createdUser.getEmail());
 
         return createdUser;
     }
@@ -42,8 +47,8 @@ public class UserService {
 
         if (userToDelete.isPresent()) {
             userRepository.deleteById(userId);
-            log.info("User with ID {} deleted successfully", userToDelete.get().getId());
-        } else throw new EntityNotFoundException("User with ID " + userId + " not found.");
+            log.info("User (ID: {}) deleted successfully.", userToDelete.get().getId());
+        } else throw new EntityNotFoundException("User (ID: " + userId + ") not found.");
     }
 
     public UserDto update(@Valid UserDto userToUpdateDto, @NotNull Long userId) {
@@ -51,20 +56,23 @@ public class UserService {
                 .map(entity -> userMapper.update(userToUpdateDto, entity))
                 .map(userRepository::save)
                 .map(userMapper::toDto)
-                .orElseThrow(() -> new EntityNotFoundException("User with ID " + userId + " not found."));
+                .orElseThrow(() -> new EntityNotFoundException("User (ID: " + userId + ") not found."));
     }
 
     @Transactional(readOnly = true)
     public UserReadDto findById(@NotNull Long userId) {
         return userRepository.findById(userId)
                 .map(userReadMapper::toDto)
-                .orElseThrow(() -> new EntityNotFoundException("User with ID " + userId + " not found."));
+                .orElseThrow(() -> new EntityNotFoundException("User (ID: " + userId + ") not found."));
     }
 
     @Transactional(readOnly = true)
-    public List<UserReadDto> findAll() {
-        return userRepository.findAll().stream()
-                .map(userReadMapper::toDto)
-                .collect(Collectors.toList());
+    public Page<UserReadDto> findAll(@NotNull int pageSize, @NotNull int pageNumber) {
+        Pageable pageable = PageRequest.of(pageNumber, pageSize);
+
+        Page<User> usersPage = userRepository.findAll(pageable);
+
+        return usersPage.map(userReadMapper::toDto);
+
     }
 }

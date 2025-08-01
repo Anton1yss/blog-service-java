@@ -1,11 +1,11 @@
 package by.AntonDemchuk.blog.service;
 
 import by.AntonDemchuk.blog.database.entity.Post;
+import by.AntonDemchuk.blog.database.entity.PostCategory;
 import by.AntonDemchuk.blog.database.entity.User;
 import by.AntonDemchuk.blog.dto.PostDto;
 import by.AntonDemchuk.blog.dto.PostReadDto;
-import by.AntonDemchuk.blog.mapper.PostMapper;
-import by.AntonDemchuk.blog.mapper.PostReadMapper;
+import by.AntonDemchuk.blog.mapper.*;
 import by.AntonDemchuk.blog.repository.PostRepository;
 import by.AntonDemchuk.blog.repository.UserRepository;
 import jakarta.persistence.EntityNotFoundException;
@@ -13,13 +13,16 @@ import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.validation.annotation.Validated;
 
-import java.util.List;
+import java.time.LocalDateTime;
 import java.util.Optional;
-import java.util.stream.Collectors;
 
 @Service
 @Transactional
@@ -27,33 +30,37 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 @Slf4j
 public class PostService {
-
     private final PostRepository postRepository;
-    private final PostMapper postMapper;
-    private final PostReadMapper postReadMapper;
     private final UserRepository userRepository;
 
+    private final PostMapper postMapper;
+    private final PostReadMapper postReadMapper;
+
     public PostDto create(@Valid PostDto postDto, @NotNull Long userId) {
+
         User user = userRepository.findById(userId)
-                .orElseThrow(() -> new EntityNotFoundException("User with Id " + userId + " not found"));
+                .orElseThrow(() -> new EntityNotFoundException("User (ID: " + userId + ") not found."));
 
         Post newPostToCreate = postMapper.toEntity(postDto);
         newPostToCreate.setUser(user);
+        newPostToCreate.setCreationDate(LocalDateTime.now());
 
         PostDto createdPost = postMapper.toDto(postRepository.save(newPostToCreate));
-        log.info("Post from User {} created successfully", userId);
+        log.info("Post from User (ID: {}) created successfully.", userId);
 
         return createdPost;
     }
 
-    public void delete(@NotNull Long postId){
-        Optional<Post> postToDelete = postRepository.findById(postId);
+    public void delete(@NotNull Long postId) {
+        User user = (User) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+
+        Optional<Post> postToDelete = postRepository.findByIdAndUserId(postId, user.getId());
 
         if (postToDelete.isPresent()) {
             postRepository.delete(postToDelete.get());
-            log.info("Post with Id {} deleted successfully", postId);
-        } else{
-            throw new EntityNotFoundException("Post with ID " + postId + " not found");
+            log.info("Post (ID: {}) deleted successfully.", postId);
+        } else {
+            throw new EntityNotFoundException("Post (ID: " + postId + ") not found.");
         }
     }
 
@@ -62,27 +69,43 @@ public class PostService {
                 .map(entity -> postMapper.update(postToUpdate, entity))
                 .map(postRepository::save)
                 .map(postMapper::toDto)
-                .orElseThrow(() -> new EntityNotFoundException("Post with ID " + postId + " not found"));
+                .orElseThrow(() -> new EntityNotFoundException("Post (ID: " + postId + ") not found."));
     }
 
     @Transactional(readOnly = true)
     public PostReadDto findById(@NotNull Long postId) {
         return postRepository.findById(postId)
                 .map(postReadMapper::toDto)
-                .orElseThrow(() -> new EntityNotFoundException("Post with ID " + postId + " not found"));
+                .orElseThrow(() -> new EntityNotFoundException("Post (ID: " + postId + ") not found"));
     }
 
     @Transactional(readOnly = true)
-    public List<PostReadDto> findAllByUserId(@NotNull Long userId) {
-        return postRepository.findAllByUserId(userId).stream()
-                .map(postReadMapper::toDto)
-                .collect(Collectors.toList());
+    public Page<PostReadDto> findAllByUserId(@NotNull int pageSize, @NotNull int pageNumber, @NotNull Long userId) {
+        Pageable pageable = PageRequest.of(pageNumber, pageSize);
+
+        Page<Post> userPostsPage = postRepository.findAllByUserId(pageable, userId);
+
+        return userPostsPage.map(postReadMapper::toDto);
     }
 
     @Transactional(readOnly = true)
-    public List<PostReadDto> findAll() {
-        return postRepository.findAll().stream()
-                .map(postReadMapper::toDto)
-                .collect(Collectors.toList());
+    public Page<PostReadDto> findAll(@NotNull int pageSize, @NotNull int pageNumber) {
+        Pageable pageable = PageRequest.of(pageNumber, pageSize);
+
+        Page<Post> postsPage = postRepository.findAll(pageable);
+
+        var postsDto = postsPage.map(postReadMapper::toDto);
+
+        return postsDto;
+    }
+
+    @Transactional
+    public Page<PostReadDto> findAllByCategory(@NotNull int pageSize, @NotNull int pageNumber, @NotNull PostCategory category) {
+        Pageable pageable = PageRequest.of(pageNumber, pageSize);
+
+        Page<Post> postsByCategoryPage = postRepository.findAllByCategory(pageable, category);
+
+        return postsByCategoryPage.map(postReadMapper::toDto);
+
     }
 }

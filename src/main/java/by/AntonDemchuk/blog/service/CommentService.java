@@ -15,6 +15,9 @@ import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.validation.annotation.Validated;
@@ -39,17 +42,17 @@ public class CommentService {
 
     public CommentDto create(@Valid CommentDto commentDto, @NotNull Long postId, @NotNull Long userId) {
         User user = userRepository.findById(userId)
-                .orElseThrow(() -> new EntityNotFoundException("User with ID " + userId + " not found"));
+                .orElseThrow(() -> new EntityNotFoundException("User (ID: " + userId + ") not found."));
 
         Post post = postRepository.findById(postId)
-                .orElseThrow(() -> new EntityNotFoundException("Post with ID " + postId + " not found"));
+                .orElseThrow(() -> new EntityNotFoundException("Post (ID: " + postId + ") not found."));
 
         Comment comment = commentMapper.toEntity(commentDto);
         comment.setUser(user);
         comment.setPost(post);
 
         CommentDto createdComment = commentMapper.toDto(commentRepository.save(comment));
-        log.info("Comment from User {} for Post {} created successfully", userId, postId);
+        log.info("Comment from User (ID: {}) for Post (ID: {}) created successfully.", userId, postId);
 
         return createdComment;
     }
@@ -59,31 +62,35 @@ public class CommentService {
 
         if (commentToDelete.isPresent()) {
             commentRepository.deleteById(commentId);
-            log.info("Comment with ID {} deleted successfully", commentId);
+            log.info("Comment (ID: {}) deleted successfully", commentId);
         } else {
-            throw new EntityNotFoundException("Comment with ID" + commentId + " not found.");
+            throw new EntityNotFoundException("Comment (ID: " + commentId + ") not found.");
         }
     }
 
-    public CommentDto update(@Valid CommentDto commentToUpdate, @NotNull Long commentId) {
-        return commentRepository.findById(commentId)
-                .map(entity -> commentMapper.update(commentToUpdate, entity))
-                .map(commentRepository::save)
-                .map(commentMapper::toDto)
-                .orElseThrow(() -> new EntityNotFoundException("Comment with ID" + commentId + " not found."));
-    }
+//    public CommentDto update(@Valid CommentDto commentToUpdate, @NotNull Long commentId) {
+//
+//        return commentRepository.findByPostIdAndUserId(commentId, commentToUpdate.getPostId(), commentToUpdate.getUserId())
+//                .map(entity -> commentMapper.update(commentToUpdate, entity))
+//                .map(commentRepository::save)
+//                .map(commentMapper::toDto)
+//                .orElseThrow(() -> new EntityNotFoundException("Comment (ID: " + commentId + ") not found."));
+//
+//    }
 
     @Transactional(readOnly = true)
     public CommentReadDto findById(@NotNull Long commentId) {
         return commentRepository.findById(commentId)
                 .map(commentReadMapper::toDto)
-                .orElseThrow(() -> new EntityNotFoundException("Comment with ID" + commentId + " not found."));
+                .orElseThrow(() -> new EntityNotFoundException("Comment (ID: " + commentId + ") not found."));
     }
 
     @Transactional(readOnly = true)
-    public List<CommentReadDto> findAllByPostId(@NotNull Long postId) {
-        return commentRepository.findAllByPostId(postId).stream()
-                .map(commentReadMapper::toDto)
-                .collect(Collectors.toList());
+    public Page<CommentReadDto> findAllByPostId(@NotNull Long postId, @NotNull int pageSize, @NotNull int pageNumber) {
+        Pageable pageable = PageRequest.of(pageNumber, pageSize);
+
+        Page<Comment> commentsPage = commentRepository.findAllByPostId(pageable, postId);
+
+        return commentsPage.map(commentReadMapper::toDto);
     }
 }
