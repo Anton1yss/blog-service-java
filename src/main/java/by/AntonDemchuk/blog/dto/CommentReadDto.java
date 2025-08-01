@@ -13,5 +13,5 @@ public class CommentReadDto {
     private final String comment;
     private final LocalDateTime postDate;
     private final UserReadDto author;
-    private final PostReadDto post;
+    private final Long postId;
 }

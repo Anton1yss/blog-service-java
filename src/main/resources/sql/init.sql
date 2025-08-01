@@ -5,7 +5,7 @@ CREATE TABLE IF NOT EXISTS Users(
     lastname VARCHAR(32),
     birth_date DATE,
     email varchar(64) UNIQUE,
-    password varchar(64) NOT NULL,
+    password varchar(128) DEFAULT '{noop}123',
     personal_info VARCHAR(256)
 );
 
@@ -15,6 +15,7 @@ CREATE TABLE IF NOT EXISTS Posts(
     description VARCHAR(512),
     category VARCHAR(64),
     post_date TIMESTAMP,
+    update_date TIMESTAMP,
     user_id BIGINT REFERENCES Users(id)
 );
 
@@ -23,7 +24,7 @@ CREATE TABLE IF NOT EXISTS Comments(
     user_id BIGINT REFERENCES Users(id),
     post_id BIGINT REFERENCES Posts(id),
     post_date TIMESTAMP,
-    message varchar(512) /* розмір не оновлений */
+    message varchar(512)
 );
 
 CREATE TABLE IF NOT EXISTS Reactions(

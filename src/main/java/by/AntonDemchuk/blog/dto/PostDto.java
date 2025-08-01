@@ -1,23 +1,28 @@
 package by.AntonDemchuk.blog.dto;
 
 import by.AntonDemchuk.blog.database.entity.PostCategory;
+import com.fasterxml.jackson.annotation.JsonFormat;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
-import lombok.AllArgsConstructor;
-import lombok.Data;
+import lombok.*;
+import org.springframework.format.annotation.DateTimeFormat;
 
-@Data
-@AllArgsConstructor // видалити потім
+import java.time.LocalDateTime;
+
+@Value
 public class PostDto {
 
     @NotNull(message = "Title cannot be empty.")
     @Size(max = 128, message = "Title's too long!")
-    private String title;
+    String title;
 
     @NotNull(message = "Description cannot be empty.")
     @Size(max = 512, message = "Description's too long!")
-    private String description;
+    String description;
 
     @NotNull
-    private PostCategory postCategory;
+    LocalDateTime updateDate;
+
+    @NotNull
+    PostCategory category;
 }
