@@ -2,13 +2,14 @@ package by.AntonDemchuk.blog.dto;
 
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
+import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.Setter;
 
 import java.time.LocalDateTime;
 
 @Data
-@AllArgsConstructor // delete potim
 public class CommentDto {
     @Size(min = 1, max = 512)
     @NotNull(message = "Comment cannot be Empty.")
@@ -16,4 +17,10 @@ public class CommentDto {
 
     @NotNull(message = "Creation Time cannot be Empty.")
     private LocalDateTime postDate;
+
+    @NotNull
+    private Long userId;
+
+    @NotNull
+    private Long postId;
 }

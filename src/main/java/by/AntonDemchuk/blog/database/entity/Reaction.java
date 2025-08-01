@@ -12,15 +12,15 @@ import lombok.*;
 @EqualsAndHashCode(exclude = {"post", "user"})
 @AllArgsConstructor
 @NoArgsConstructor
-@IdClass(ReactionIds.class)
 public class Reaction {
 
-    @Id
-    @OneToOne
+    @EmbeddedId
+    private ReactionId id;
+
+    @ManyToOne
     @JoinColumn(name = "user_id")
     private User user;
 
-    @Id
     @ManyToOne
     @JoinColumn(name = "post_id")
     private Post post;

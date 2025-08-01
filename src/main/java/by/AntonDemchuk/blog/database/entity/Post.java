@@ -1,5 +1,6 @@
 package by.AntonDemchuk.blog.database.entity;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -31,7 +32,12 @@ public class Post implements BaseEntity<Long>{
     private PostCategory category;
 
     @Column(name = "post_date")
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm")
     private LocalDateTime creationDate;
+
+    @Column(name = "update_date")
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm")
+    private LocalDateTime updateDate;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id")
@@ -44,5 +50,4 @@ public class Post implements BaseEntity<Long>{
     @Builder.Default
     @OneToMany(mappedBy = "post", orphanRemoval = true, fetch = FetchType.LAZY)
     private List<Reaction> reactions = new ArrayList<>();
-
 }

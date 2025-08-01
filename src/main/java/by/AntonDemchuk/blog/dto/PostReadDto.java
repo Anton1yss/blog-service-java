@@ -1,8 +1,6 @@
 package by.AntonDemchuk.blog.dto;
 
 import by.AntonDemchuk.blog.database.entity.PostCategory;
-import jakarta.validation.constraints.NotNull;
-import jakarta.validation.constraints.Size;
 import lombok.*;
 
 import java.time.LocalDateTime;
@@ -11,6 +9,7 @@ import java.time.LocalDateTime;
 @AllArgsConstructor
 @ToString
 @EqualsAndHashCode
+@Builder
 public class PostReadDto {
     private final Long id;
     private final String title;
@@ -18,4 +17,6 @@ public class PostReadDto {
     private final PostCategory category;
     private final LocalDateTime creationDate;
     private final UserReadDto author;
+    private final int reactionCount;
+    private final int commentCount;
 }
