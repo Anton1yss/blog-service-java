@@ -3,6 +3,7 @@ package by.AntonDemchuk.blog.service;
 import by.AntonDemchuk.blog.database.entity.User;
 import by.AntonDemchuk.blog.dto.UserLoginDto;
 import by.AntonDemchuk.blog.dto.UserRegisterDto;
+import by.AntonDemchuk.blog.exception.RegistrationException;
 import by.AntonDemchuk.blog.mapper.UserRegisterMapper;
 import by.AntonDemchuk.blog.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
@@ -13,7 +14,7 @@ import org.springframework.stereotype.Service;
 
 @Service
 @RequiredArgsConstructor
-public class AuthenticationService {
+public class AuthService {
 
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
@@ -24,7 +25,10 @@ public class AuthenticationService {
 
         User userToRegister = userRegisterMapper.toEntity(dto);
 
-        userToRegister.setPassword(passwordEncoder.encode(dto.getPassword()));
+        if(dto.getPassword().equals(dto.getConfirmPassword())) {
+            userToRegister.setPassword(passwordEncoder.encode(dto.getPassword()));
+
+        } else throw new RegistrationException("Passwords do not match.");
 
         return userRepository.save(userToRegister);
     }
@@ -40,6 +44,4 @@ public class AuthenticationService {
         return userRepository.findByEmail(input.getEmail())
                 .orElseThrow();
     }
-
-
 }

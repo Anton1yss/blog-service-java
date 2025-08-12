@@ -16,15 +16,12 @@ import jakarta.validation.constraints.NotNull;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.validation.annotation.Validated;
 
-import java.util.List;
 import java.util.Optional;
-import java.util.stream.Collectors;
 
 @Service
 @Transactional
@@ -57,8 +54,8 @@ public class CommentService {
         return createdComment;
     }
 
-    public void delete(@NotNull Long commentId) {
-        Optional<Comment> commentToDelete = commentRepository.findById(commentId);
+    public void delete(@NotNull Long commentId, @NotNull Long userId) {
+        Optional<Comment> commentToDelete = commentRepository.findByIdAndUserId(commentId, userId);
 
         if (commentToDelete.isPresent()) {
             commentRepository.deleteById(commentId);
@@ -68,15 +65,17 @@ public class CommentService {
         }
     }
 
-//    public CommentDto update(@Valid CommentDto commentToUpdate, @NotNull Long commentId) {
-//
-//        return commentRepository.findByPostIdAndUserId(commentId, commentToUpdate.getPostId(), commentToUpdate.getUserId())
-//                .map(entity -> commentMapper.update(commentToUpdate, entity))
-//                .map(commentRepository::save)
-//                .map(commentMapper::toDto)
-//                .orElseThrow(() -> new EntityNotFoundException("Comment (ID: " + commentId + ") not found."));
-//
-//    }
+    public CommentDto update(@Valid CommentDto commentToUpdate, @NotNull Long commentId, @NotNull Long userId) {
+        Optional<Comment> existingComment = commentRepository.findByIdAndUserId(commentId, userId);
+
+        if(existingComment.isPresent()){
+            Comment comment = commentMapper.update(commentToUpdate, existingComment.get());
+            commentRepository.save(comment);
+            log.info("Comment (ID: {}) updated successfully by user (ID: {}).", commentId, userId);
+            return commentMapper.toDto(comment);
+
+        } throw new EntityNotFoundException("Comment (ID: " + commentId + ") from User (ID: "+ userId + ") not found.");
+    }
 
     @Transactional(readOnly = true)
     public CommentReadDto findById(@NotNull Long commentId) {
@@ -86,11 +85,23 @@ public class CommentService {
     }
 
     @Transactional(readOnly = true)
-    public Page<CommentReadDto> findAllByPostId(@NotNull Long postId, @NotNull int pageSize, @NotNull int pageNumber) {
-        Pageable pageable = PageRequest.of(pageNumber, pageSize);
+    public Page<CommentReadDto> findAllByPostId(@NotNull Long postId, Pageable pageable) {
 
-        Page<Comment> commentsPage = commentRepository.findAllByPostId(pageable, postId);
+        if(postRepository.existsById(postId)) {
+            Page<Comment> commentsPage = commentRepository.findAllByPostId(postId, pageable);
+            return commentsPage.map(commentReadMapper::toDto);
 
-        return commentsPage.map(commentReadMapper::toDto);
+        } else throw new EntityNotFoundException("Post (ID: " + postId + ") not found.");
+    }
+
+    @Transactional(readOnly = true)
+    public Page<CommentReadDto> findAllByUserId(@NotNull Long userId, Pageable pageable) {
+
+        if(userRepository.existsById(userId)) {
+            Page<Comment> commentsPage = commentRepository.findAllByUserId(userId, pageable);
+            return commentsPage.map(commentReadMapper::toDto);
+
+        } else throw new EntityNotFoundException("User (ID: " + userId + ") not found.");
+
     }
 }

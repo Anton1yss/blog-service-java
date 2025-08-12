@@ -1,15 +1,13 @@
 package by.AntonDemchuk.blog.dto;
 
 import by.AntonDemchuk.blog.database.entity.PostCategory;
-import com.fasterxml.jackson.annotation.JsonFormat;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 import lombok.*;
-import org.springframework.format.annotation.DateTimeFormat;
 
 import java.time.LocalDateTime;
 
-@Value
+@Data
 public class PostDto {
 
     @NotNull(message = "Title cannot be empty.")

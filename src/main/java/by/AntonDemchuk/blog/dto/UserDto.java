@@ -1,7 +1,6 @@
 package by.AntonDemchuk.blog.dto;
 
 import jakarta.validation.constraints.*;
-import lombok.AllArgsConstructor;
 import lombok.Data;
 
 import java.time.LocalDate;

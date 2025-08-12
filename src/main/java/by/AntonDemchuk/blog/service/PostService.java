@@ -1,22 +1,22 @@
 package by.AntonDemchuk.blog.service;
 
 import by.AntonDemchuk.blog.database.entity.Post;
-import by.AntonDemchuk.blog.database.entity.PostCategory;
 import by.AntonDemchuk.blog.database.entity.User;
 import by.AntonDemchuk.blog.dto.PostDto;
 import by.AntonDemchuk.blog.dto.PostReadDto;
+import by.AntonDemchuk.blog.dto.PostSearchParamsDto;
 import by.AntonDemchuk.blog.mapper.*;
 import by.AntonDemchuk.blog.repository.PostRepository;
 import by.AntonDemchuk.blog.repository.UserRepository;
+import by.AntonDemchuk.blog.specification.PostSpecification;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
-import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.validation.annotation.Validated;
@@ -37,7 +37,6 @@ public class PostService {
     private final PostReadMapper postReadMapper;
 
     public PostDto create(@Valid PostDto postDto, @NotNull Long userId) {
-
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new EntityNotFoundException("User (ID: " + userId + ") not found."));
 
@@ -51,25 +50,25 @@ public class PostService {
         return createdPost;
     }
 
-    public void delete(@NotNull Long postId) {
-        User user = (User) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-
-        Optional<Post> postToDelete = postRepository.findByIdAndUserId(postId, user.getId());
+    public void delete(@NotNull Long postId, @NotNull Long userId) {
+        Optional<Post> postToDelete = postRepository.findByIdAndUserId(postId, userId);
 
         if (postToDelete.isPresent()) {
             postRepository.delete(postToDelete.get());
             log.info("Post (ID: {}) deleted successfully.", postId);
-        } else {
-            throw new EntityNotFoundException("Post (ID: " + postId + ") not found.");
-        }
+        } else throw new EntityNotFoundException("Post (ID: " + postId + ") from User (ID: "+ userId + ") not found.");
     }
 
-    public PostDto update(@Valid PostDto postToUpdate, @NotNull Long postId) {
-        return postRepository.findById(postId)
-                .map(entity -> postMapper.update(postToUpdate, entity))
-                .map(postRepository::save)
-                .map(postMapper::toDto)
-                .orElseThrow(() -> new EntityNotFoundException("Post (ID: " + postId + ") not found."));
+    public PostDto update(@Valid PostDto postToUpdate, @NotNull Long postId, @NotNull Long userId) {
+        Optional <Post> existingPost = postRepository.findByIdAndUserId(postId, userId);
+
+        if(existingPost.isPresent()){
+            Post post = postMapper.update(postToUpdate, existingPost.get());
+            postRepository.save(post);
+            log.info("Post (ID: {}) updated successfully by user (ID: {}).", postId, userId);
+            return postMapper.toDto(post);
+
+        } throw new EntityNotFoundException("Post (ID: " + postId + ") from User (ID: "+ userId + ") not found.");
     }
 
     @Transactional(readOnly = true)
@@ -80,32 +79,23 @@ public class PostService {
     }
 
     @Transactional(readOnly = true)
-    public Page<PostReadDto> findAllByUserId(@NotNull int pageSize, @NotNull int pageNumber, @NotNull Long userId) {
-        Pageable pageable = PageRequest.of(pageNumber, pageSize);
+    public Page<PostReadDto> findAllByUserId(Pageable pageable, @NotNull Long userId) {
 
-        Page<Post> userPostsPage = postRepository.findAllByUserId(pageable, userId);
+        if(userRepository.existsById(userId)){
+            Page<Post> userPostsPage = postRepository.findAllByUserId(pageable, userId);
+            return userPostsPage.map(postReadMapper::toDto);
 
-        return userPostsPage.map(postReadMapper::toDto);
+        } else throw new EntityNotFoundException("User (ID: " + userId + ") not found.");
     }
 
     @Transactional(readOnly = true)
-    public Page<PostReadDto> findAll(@NotNull int pageSize, @NotNull int pageNumber) {
-        Pageable pageable = PageRequest.of(pageNumber, pageSize);
+    public Page<PostReadDto> findAll(PostSearchParamsDto postSearchParamsDto, Pageable pageable) {
 
-        Page<Post> postsPage = postRepository.findAll(pageable);
+        Specification<Post> spec = PostSpecification.buildSpecification(postSearchParamsDto);
 
-        var postsDto = postsPage.map(postReadMapper::toDto);
+        Page<Post> postsPage = postRepository.findAll(spec, pageable);
 
-        return postsDto;
+        return postsPage.map(postReadMapper::toDto);
     }
 
-    @Transactional
-    public Page<PostReadDto> findAllByCategory(@NotNull int pageSize, @NotNull int pageNumber, @NotNull PostCategory category) {
-        Pageable pageable = PageRequest.of(pageNumber, pageSize);
-
-        Page<Post> postsByCategoryPage = postRepository.findAllByCategory(pageable, category);
-
-        return postsByCategoryPage.map(postReadMapper::toDto);
-
-    }
 }

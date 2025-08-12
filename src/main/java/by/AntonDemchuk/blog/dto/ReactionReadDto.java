@@ -7,6 +7,7 @@ import lombok.*;
 @AllArgsConstructor
 @ToString
 @EqualsAndHashCode
+@Builder
 public class ReactionReadDto {
     private final Long userId;
     private final Long postId;

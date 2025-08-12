@@ -4,12 +4,12 @@ import by.AntonDemchuk.blog.database.entity.User;
 import by.AntonDemchuk.blog.dto.LoginResponse;
 import by.AntonDemchuk.blog.dto.UserLoginDto;
 import by.AntonDemchuk.blog.dto.UserRegisterDto;
-import by.AntonDemchuk.blog.service.AuthenticationService;
+import by.AntonDemchuk.blog.service.AuthService;
 import by.AntonDemchuk.blog.service.JwtService;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
-import org.springframework.stereotype.Controller;
-import org.springframework.stereotype.Repository;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -18,22 +18,22 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/auth")
-public class AuthenticationController {
+@Tag(name = "Auth Controller")
+public class AuthController {
 
     private final JwtService jwtService;
-
-    private final AuthenticationService authenticationService;
+    private final AuthService authService;
 
     @PostMapping("/signup")
-    public ResponseEntity<User> register(@RequestBody UserRegisterDto registerUserDto) {
-        User registeredUser = authenticationService.signup(registerUserDto);
+    public ResponseEntity<User> register(@Valid @RequestBody UserRegisterDto registerUserDto) {
+        User registeredUser = authService.signup(registerUserDto);
 
         return ResponseEntity.ok(registeredUser);
     }
 
     @PostMapping("/login")
-    public ResponseEntity<LoginResponse> authenticate(@RequestBody UserLoginDto loginUserDto) {
-        User authenticatedUser = authenticationService.authenticate(loginUserDto);
+    public ResponseEntity<LoginResponse> authenticate(@Valid @RequestBody UserLoginDto loginUserDto) {
+        User authenticatedUser = authService.authenticate(loginUserDto);
 
         String jwtToken = jwtService.generateToken(authenticatedUser);
 

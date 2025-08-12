@@ -18,10 +18,12 @@ public class Reaction {
     private ReactionId id;
 
     @ManyToOne
+    @MapsId("userId")
     @JoinColumn(name = "user_id")
     private User user;
 
     @ManyToOne
+    @MapsId("postId")
     @JoinColumn(name = "post_id")
     private Post post;
 

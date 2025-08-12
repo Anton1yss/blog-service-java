@@ -14,7 +14,5 @@ public abstract class PostReadMapper {
     public abstract PostReadDto toDto(Post post);
 
     @Mapping(source = "author", target = "user")
-//    @Mapping(target = "reactionCount", ignore = true)
-//    @Mapping(target = "commentCount", ignore = true)
     public abstract Post toEntity(PostReadDto postReadDto);
 }

@@ -5,7 +5,7 @@ CREATE TABLE IF NOT EXISTS Users(
     lastname VARCHAR(32),
     birth_date DATE,
     email varchar(64) UNIQUE,
-    password varchar(128) DEFAULT '{noop}123',
+    password varchar(128) DEFAULT '123',
     personal_info VARCHAR(256)
 );
 

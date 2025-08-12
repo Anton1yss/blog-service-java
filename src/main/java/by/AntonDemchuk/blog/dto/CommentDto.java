@@ -2,10 +2,7 @@ package by.AntonDemchuk.blog.dto;
 
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
-import lombok.AccessLevel;
-import lombok.AllArgsConstructor;
 import lombok.Data;
-import lombok.Setter;
 
 import java.time.LocalDateTime;
 
@@ -17,10 +14,4 @@ public class CommentDto {
 
     @NotNull(message = "Creation Time cannot be Empty.")
     private LocalDateTime postDate;
-
-    @NotNull
-    private Long userId;
-
-    @NotNull
-    private Long postId;
 }

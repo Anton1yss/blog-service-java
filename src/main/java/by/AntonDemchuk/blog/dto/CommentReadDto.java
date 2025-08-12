@@ -8,6 +8,7 @@ import java.time.LocalDateTime;
 @AllArgsConstructor
 @ToString
 @EqualsAndHashCode
+@Builder
 public class CommentReadDto {
     private final Long id;
     private final String comment;

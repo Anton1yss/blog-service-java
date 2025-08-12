@@ -2,6 +2,7 @@ package by.AntonDemchuk.blog.service;
 
 import by.AntonDemchuk.blog.database.entity.Post;
 import by.AntonDemchuk.blog.database.entity.Reaction;
+import by.AntonDemchuk.blog.database.entity.ReactionId;
 import by.AntonDemchuk.blog.database.entity.User;
 import by.AntonDemchuk.blog.dto.ReactionDto;
 import by.AntonDemchuk.blog.dto.ReactionReadDto;
@@ -15,13 +16,13 @@ import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.validation.annotation.Validated;
 
-import java.util.List;
 import java.util.Optional;
-import java.util.stream.Collectors;
 
 @Service
 @Transactional
@@ -46,6 +47,11 @@ public class ReactionService {
 
         Reaction newReactionToCreate = reactionMapper.toEntity(reactionDto);
 
+        newReactionToCreate.setId(
+                ReactionId.builder().
+                postId(postId).
+                userId(userId).
+                build());
         newReactionToCreate.setUser(user);
         newReactionToCreate.setPost(post);
 
@@ -61,22 +67,25 @@ public class ReactionService {
         if (reactionToDelete.isPresent()) {
             reactionRepository.delete(reactionToDelete.get());
             log.info("Reaction for User {}: and Post: {} deleted successfully", userId, postId);
-        } else {
-            throw new EntityNotFoundException("Reaction from User " + userId + " and Post " + postId + " not found");
-        }
+        } else throw new EntityNotFoundException("Reaction from User " + userId + " and Post " + postId + " not found");
     }
 
     @Transactional(readOnly = true)
-    public List<ReactionReadDto> findAllByPostId(@NotNull Long postId) {
-        return reactionRepository.findAllByPostId(postId).stream()
-                .map(reactionReadMapper::toDto)
-                .collect(Collectors.toList());
+    public Page<ReactionReadDto> findAllByPostId(@NotNull Long postId, Pageable pageable) {
+
+        if(postRepository.existsById(postId)) {
+            Page<Reaction> reactionsPage = reactionRepository.findAllByPostId(postId, pageable);
+            return reactionsPage.map(reactionReadMapper::toDto);
+
+        }  else throw new EntityNotFoundException("Post with ID " + postId + " not found");
     }
 
     @Transactional(readOnly = true)
-    public ReactionReadDto findByPostIdAndUserId(@NotNull Long postId, @NotNull Long userId) {
-        return reactionRepository.findByPostIdAndUserId(postId, userId)
-                .map(reactionReadMapper::toDto)
-                .orElseThrow(() -> new EntityNotFoundException("Reaction from User " + userId + " and Post " + postId + " not found"));
+    public Long countAllByPostId(@NotNull Long postId) {
+
+        if(postRepository.existsById(postId)) {
+            return reactionRepository.countByPostId(postId);
+
+        } else throw new EntityNotFoundException("Post with ID " + postId + " not found");
     }
 }
