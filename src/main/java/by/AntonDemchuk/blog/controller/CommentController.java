@@ -1,10 +1,12 @@
 package by.AntonDemchuk.blog.controller;
 
 import by.AntonDemchuk.blog.database.entity.User;
-import by.AntonDemchuk.blog.dto.CommentDto;
-import by.AntonDemchuk.blog.dto.CommentReadDto;
-import by.AntonDemchuk.blog.dto.PostDto;
+import by.AntonDemchuk.blog.dto.PageDto;
+import by.AntonDemchuk.blog.dto.comment.CommentDto;
+import by.AntonDemchuk.blog.dto.comment.CommentReadDto;
+import by.AntonDemchuk.blog.dto.post.PostDto;
 import by.AntonDemchuk.blog.service.CommentService;
+import by.AntonDemchuk.blog.service.SharedService;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
@@ -25,46 +27,43 @@ public class CommentController {
 
     private final CommentService commentService;
 
-    @GetMapping("/{postId}")
-    public ResponseEntity<Page<CommentReadDto>> getAllByPostId(
+    @GetMapping("/post/{postId}")
+    public ResponseEntity<PageDto<CommentReadDto>> getAllByPostId(
             @ParameterObject @PageableDefault(size = 5, page = 0, sort = {}) Pageable pageable,
             @PathVariable @NotNull Long postId) {
 
         return ResponseEntity.ok(commentService.findAllByPostId(postId, pageable));
     }
 
-    @GetMapping("/{userId}")
-    public ResponseEntity<Page<CommentReadDto>> getAllByUserId(
+    @GetMapping("/user/{userId}")
+    public ResponseEntity<PageDto<CommentReadDto>> getAllByUserId(
             @ParameterObject @PageableDefault(size = 5, page = 0, sort = {}) Pageable pageable,
-            @PathVariable @NotNull Long userId) {
+            @PathVariable Long userId) {
 
-        return ResponseEntity.ok(commentService.findAllByUserId(userId, pageable));
+        return ResponseEntity.ok(commentService.findAllByUserId(pageable, userId));
     }
 
     @PostMapping("/")
     public ResponseEntity<CommentDto> create(
             @RequestBody @Valid CommentDto commentDto,
-            @RequestParam Long postId,
-            @AuthenticationPrincipal User user) {
+            @RequestParam Long postId) {
 
-        return ResponseEntity.ok(commentService.create(commentDto, postId, user.getId()));
+        return ResponseEntity.ok(commentService.create(commentDto, postId));
     }
 
     @DeleteMapping("/")
     public ResponseEntity<PostDto> delete(
-            @RequestParam @NotNull Long id,
-            @AuthenticationPrincipal User user) {
+            @RequestParam @NotNull Long id) {
 
-        commentService.delete(id, user.getId());
+        commentService.delete(id);
         return ResponseEntity.ok().build();
     }
 
     @PutMapping("/")
     public ResponseEntity<CommentDto> update(
             @RequestParam Long id,
-            @RequestBody CommentDto commentDto,
-            @AuthenticationPrincipal User user){
+            @RequestBody CommentDto commentDto){
 
-        return ResponseEntity.ok(commentService.update(commentDto, id, user.getId()));
+        return ResponseEntity.ok(commentService.update(commentDto, id));
     }
 }

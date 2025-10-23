@@ -4,10 +4,11 @@ import by.AntonDemchuk.blog.database.entity.Post;
 import by.AntonDemchuk.blog.database.entity.Reaction;
 import by.AntonDemchuk.blog.database.entity.ReactionId;
 import by.AntonDemchuk.blog.database.entity.User;
-import by.AntonDemchuk.blog.dto.ReactionDto;
-import by.AntonDemchuk.blog.dto.ReactionReadDto;
-import by.AntonDemchuk.blog.mapper.ReactionMapper;
-import by.AntonDemchuk.blog.mapper.ReactionReadMapper;
+import by.AntonDemchuk.blog.dto.PageDto;
+import by.AntonDemchuk.blog.dto.reaction.ReactionDto;
+import by.AntonDemchuk.blog.dto.reaction.ReactionReadDto;
+import by.AntonDemchuk.blog.mapper.reaction.ReactionMapper;
+import by.AntonDemchuk.blog.mapper.reaction.ReactionReadMapper;
 import by.AntonDemchuk.blog.repository.PostRepository;
 import by.AntonDemchuk.blog.repository.ReactionRepository;
 import by.AntonDemchuk.blog.repository.UserRepository;
@@ -32,15 +33,16 @@ import java.util.Optional;
 public class ReactionService {
 
     private final ReactionRepository reactionRepository;
-    private final UserRepository userRepository;
     private final PostRepository postRepository;
 
     private final ReactionMapper reactionMapper;
     private final ReactionReadMapper reactionReadMapper;
 
-    public ReactionDto create(@Valid ReactionDto reactionDto, @NotNull Long postId, @NotNull Long userId) {
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new EntityNotFoundException("User with ID " + userId + " not found"));
+    private final SharedService sharedService;
+
+    public ReactionDto create(@Valid ReactionDto reactionDto, @NotNull Long postId) {
+
+        User authrodizedUser = sharedService.getCurrentUser();
 
         Post post = postRepository.findById(postId)
                 .orElseThrow(() -> new EntityNotFoundException("Post with ID " + postId + " not found"));
@@ -50,32 +52,35 @@ public class ReactionService {
         newReactionToCreate.setId(
                 ReactionId.builder().
                 postId(postId).
-                userId(userId).
+                userId(authrodizedUser.getId()).
                 build());
-        newReactionToCreate.setUser(user);
+        newReactionToCreate.setUser(authrodizedUser);
         newReactionToCreate.setPost(post);
 
         ReactionDto createdReaction = reactionMapper.toDto(reactionRepository.save(newReactionToCreate));
-        log.info("Reaction from User {} for Post {} created successfully", userId, postId);
+        log.info("Reaction from User {} for Post {} created successfully", authrodizedUser.getId(), postId);
 
         return createdReaction;
     }
 
-    public void delete(@NotNull Long postId, @NotNull Long userId) {
-        Optional<Reaction> reactionToDelete = reactionRepository.findByPostIdAndUserId(postId, userId);
+    public void delete(@NotNull Long postId) {
+
+        User authrodizedUser = sharedService.getCurrentUser();
+
+        Optional<Reaction> reactionToDelete = reactionRepository.findByPostIdAndUserId(postId, authrodizedUser.getId());
 
         if (reactionToDelete.isPresent()) {
             reactionRepository.delete(reactionToDelete.get());
-            log.info("Reaction for User {}: and Post: {} deleted successfully", userId, postId);
-        } else throw new EntityNotFoundException("Reaction from User " + userId + " and Post " + postId + " not found");
+            log.info("Reaction for User {}: and Post: {} deleted successfully", authrodizedUser.getId(), postId);
+        } else throw new EntityNotFoundException("Reaction from User " + authrodizedUser.getId() + " and Post " + postId + " not found");
     }
 
     @Transactional(readOnly = true)
-    public Page<ReactionReadDto> findAllByPostId(@NotNull Long postId, Pageable pageable) {
+    public PageDto<ReactionReadDto> findAllByPostId(@NotNull Long postId, Pageable pageable) {
 
         if(postRepository.existsById(postId)) {
             Page<Reaction> reactionsPage = reactionRepository.findAllByPostId(postId, pageable);
-            return reactionsPage.map(reactionReadMapper::toDto);
+            return reactionReadMapper.toPageDto(reactionsPage);
 
         }  else throw new EntityNotFoundException("Post with ID " + postId + " not found");
     }

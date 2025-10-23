@@ -1,19 +1,17 @@
 package by.AntonDemchuk.blog.controller;
 
-import by.AntonDemchuk.blog.database.entity.User;
-import by.AntonDemchuk.blog.dto.ReactionDto;
-import by.AntonDemchuk.blog.dto.ReactionReadDto;
+import by.AntonDemchuk.blog.dto.PageDto;
+import by.AntonDemchuk.blog.dto.reaction.ReactionDto;
+import by.AntonDemchuk.blog.dto.reaction.ReactionReadDto;
 import by.AntonDemchuk.blog.service.ReactionService;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
 import lombok.RequiredArgsConstructor;
 import org.springdoc.core.annotations.ParameterObject;
-import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -30,7 +28,7 @@ public class ReactionController {
     }
 
     @GetMapping("/{postId}")
-    public ResponseEntity<Page<ReactionReadDto>> getReactionById(
+    public ResponseEntity<PageDto<ReactionReadDto>> getReactionById(
             @PathVariable @NotNull Long postId,
             @ParameterObject @PageableDefault(size = 5, page = 0, sort = {}) Pageable pageable) {
 
@@ -40,18 +38,16 @@ public class ReactionController {
     @PostMapping("/")
     public ResponseEntity<ReactionDto> create(
             @Valid ReactionDto reactionDto,
-            @AuthenticationPrincipal User user,
             @RequestParam @NotNull Long postId) {
 
-        return ResponseEntity.ok(reactionService.create(reactionDto, postId, user.getId() ));
+        return ResponseEntity.ok(reactionService.create(reactionDto, postId));
     }
 
     @DeleteMapping("/")
     public ResponseEntity<ReactionDto> delete(
-            @RequestParam @NotNull Long postId,
-            @AuthenticationPrincipal User user){
+            @RequestParam @NotNull Long postId){
 
-        reactionService.delete(postId, user.getId());
+        reactionService.delete(postId);
         return ResponseEntity.ok().build();
     }
 }

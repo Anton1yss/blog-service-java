@@ -55,9 +55,8 @@ public class ApplicationConfiguration {
                         "Authentication"))
                 .components(new Components().addSecuritySchemes("Bearer Authentication",
                         createAPISecurityScheme()))
-                .info(new Info().title("Something")
-                        .description(
-                                "something story").version("1.0.0"));
+                .info(new Info().title("Blog Service")
+                        .version("1.0.0"));
     }
 
     private SecurityScheme createAPISecurityScheme() {

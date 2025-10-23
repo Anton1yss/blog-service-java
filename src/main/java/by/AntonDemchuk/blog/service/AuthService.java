@@ -1,19 +1,21 @@
 package by.AntonDemchuk.blog.service;
 
 import by.AntonDemchuk.blog.database.entity.User;
-import by.AntonDemchuk.blog.dto.UserLoginDto;
-import by.AntonDemchuk.blog.dto.UserRegisterDto;
+import by.AntonDemchuk.blog.dto.user.UserLoginDto;
+import by.AntonDemchuk.blog.dto.user.UserRegisterDto;
 import by.AntonDemchuk.blog.exception.RegistrationException;
-import by.AntonDemchuk.blog.mapper.UserRegisterMapper;
+import by.AntonDemchuk.blog.mapper.user.UserRegisterMapper;
 import by.AntonDemchuk.blog.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @RequiredArgsConstructor
+@Transactional
 public class AuthService {
 
     private final UserRepository userRepository;

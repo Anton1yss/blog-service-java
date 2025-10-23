@@ -1,9 +1,10 @@
 INSERT INTO Users (username, firstname, lastname, birth_date, email, personal_info)
-VALUES ('johndoe', 'John', 'Doe', '1990-05-15', 'john.doe@email.com', 'Software developer'),
-       ('sarahsmith', 'Sarah', 'Smith', '1988-03-22', 'sarah.smith@email.com', 'Digital marketer'),
-       ('mikejohnson', 'Mike', 'Johnson', '1992-11-08', 'mike.johnson@email.com', 'Tech blogger'),
-       ('emilydavis', 'Emily', 'Davis', '1985-07-14', 'emily.davis@email.com', 'UX designer'),
-       ('alexwilson', 'Alex', 'Wilson', '1993-12-03', 'alex.wilson@email.com', 'Full-stack developer');
+VALUES ('johndoe', 'John', 'Doe', '1990-05-15', 'john.doe@example.com', 'Software developer'),
+       ('sarahsmith', 'Sarah', 'Smith', '1988-03-22', 'sarah.smith@example.com', 'Digital marketer'),
+       ('mikejohnson', 'Mike', 'Johnson', '1992-11-08', 'mike.johnson@example.com', 'Tech blogger'),
+       ('emilydavis', 'Emily', 'Davis', '1985-07-14', 'emily.davis@example.com', 'UX designer'),
+       ('test', 'Test', 'Test', '2000-01-01', 'test@example.com', 'For Testing'),
+       ('alexwilson', 'Alex', 'Wilson', '1993-12-03', 'alex.wilson@example.com', 'Full-stack developer');
 
 INSERT INTO Posts (title, description, category, post_date, update_date, user_id)
 VALUES ('Top 10 Songs of 2024', 'My personal ranking of the best songs this year', 'MUSIC', '2024-01-15 10:30:00', NULL,

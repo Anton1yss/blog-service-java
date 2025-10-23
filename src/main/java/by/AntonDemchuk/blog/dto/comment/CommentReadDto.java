@@ -1,0 +1,19 @@
+package by.AntonDemchuk.blog.dto.comment;
+
+import by.AntonDemchuk.blog.dto.user.UserReadDto;
+import lombok.*;
+
+import java.time.LocalDateTime;
+
+@Getter
+@AllArgsConstructor
+@ToString
+@EqualsAndHashCode
+@Builder
+public class CommentReadDto {
+    private final Long id;
+    private final String comment;
+    private final LocalDateTime postDate;
+    private final UserReadDto author;
+    private final Long postId;
+}

@@ -2,8 +2,8 @@ package by.AntonDemchuk.blog.controller;
 
 import by.AntonDemchuk.blog.database.entity.User;
 import by.AntonDemchuk.blog.dto.LoginResponse;
-import by.AntonDemchuk.blog.dto.UserLoginDto;
-import by.AntonDemchuk.blog.dto.UserRegisterDto;
+import by.AntonDemchuk.blog.dto.user.UserLoginDto;
+import by.AntonDemchuk.blog.dto.user.UserRegisterDto;
 import by.AntonDemchuk.blog.service.AuthService;
 import by.AntonDemchuk.blog.service.JwtService;
 import io.swagger.v3.oas.annotations.tags.Tag;

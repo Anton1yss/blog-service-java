@@ -1,10 +1,11 @@
 package by.AntonDemchuk.blog.service;
 
 import by.AntonDemchuk.blog.database.entity.User;
-import by.AntonDemchuk.blog.dto.UserDto;
-import by.AntonDemchuk.blog.dto.UserDetailedReadDto;
-import by.AntonDemchuk.blog.mapper.UserDetailedReadMapper;
-import by.AntonDemchuk.blog.mapper.UserMapper;
+import by.AntonDemchuk.blog.dto.PageDto;
+import by.AntonDemchuk.blog.dto.user.UserDto;
+import by.AntonDemchuk.blog.dto.user.UserDetailedReadDto;
+import by.AntonDemchuk.blog.mapper.user.UserDetailedReadMapper;
+import by.AntonDemchuk.blog.mapper.user.UserMapper;
 import by.AntonDemchuk.blog.repository.UserRepository;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.validation.Valid;
@@ -30,21 +31,23 @@ public class UserService {
     private final UserMapper userMapper;
     private final UserDetailedReadMapper userDetailedReadMapper;
 
-    public void delete(@NotNull Long userId) {
-        Optional<User> userToDelete = userRepository.findById(userId);
+    private final SharedService sharedService;
 
-        if (userToDelete.isPresent()) {
-            userRepository.deleteById(userId);
-            log.info("User (ID: {}) deleted successfully.", userToDelete.get().getId());
-        } else throw new EntityNotFoundException("User (ID: " + userId + ") not found.");
+    public void delete() {
+        User authrodizedUser = sharedService.getCurrentUser();
+        userRepository.deleteById(authrodizedUser.getId());
+        log.info("User (ID: {}) deleted successfully.", authrodizedUser.getId());
     }
 
-    public UserDto update(@Valid UserDto userToUpdateDto, @NotNull Long userId) {
-        return userRepository.findById(userId)
+    public UserDto update(@Valid UserDto userToUpdateDto) {
+
+        User authrodizedUser = sharedService.getCurrentUser();
+
+        return userRepository.findById(authrodizedUser.getId())
                 .map(entity -> userMapper.update(userToUpdateDto, entity))
                 .map(userRepository::save)
                 .map(userMapper::toDto)
-                .orElseThrow(() -> new EntityNotFoundException("User (ID: " + userId + ") not found."));
+                .orElseThrow(() -> new EntityNotFoundException("User (ID: " + authrodizedUser.getId() + ") not found."));
     }
 
     @Transactional(readOnly = true)
@@ -55,9 +58,9 @@ public class UserService {
     }
 
     @Transactional(readOnly = true)
-    public Page<UserDetailedReadDto> findAll(Pageable pageable) {
+    public PageDto<UserDetailedReadDto> findAll(Pageable pageable) {
         Page<User> usersPage = userRepository.findAll(pageable);
 
-        return usersPage.map(userDetailedReadMapper::toDto);
+        return userDetailedReadMapper.toPageDto(usersPage);
     }
 }

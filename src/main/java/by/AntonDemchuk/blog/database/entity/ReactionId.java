@@ -2,7 +2,6 @@ package by.AntonDemchuk.blog.database.entity;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Embeddable;
-import jakarta.persistence.Table;
 import lombok.*;
 
 import java.io.Serializable;

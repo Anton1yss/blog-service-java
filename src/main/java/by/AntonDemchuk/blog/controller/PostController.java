@@ -1,10 +1,12 @@
 package by.AntonDemchuk.blog.controller;
 
 import by.AntonDemchuk.blog.database.entity.User;
-import by.AntonDemchuk.blog.dto.PostDto;
-import by.AntonDemchuk.blog.dto.PostReadDto;
-import by.AntonDemchuk.blog.dto.PostSearchParamsDto;
+import by.AntonDemchuk.blog.dto.PageDto;
+import by.AntonDemchuk.blog.dto.post.PostDto;
+import by.AntonDemchuk.blog.dto.post.PostReadDto;
+import by.AntonDemchuk.blog.dto.post.PostSearchParamsDto;
 import by.AntonDemchuk.blog.service.PostService;
+import by.AntonDemchuk.blog.service.SharedService;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.constraints.NotNull;
 import lombok.RequiredArgsConstructor;
@@ -24,13 +26,13 @@ public class PostController {
 
     private final PostService postService;
 
-    @GetMapping("/{id}/")
-    public ResponseEntity<PostReadDto> getPost(@PathVariable @NotNull Long id) {
-        return ResponseEntity.ok(postService.findById(id));
+    @GetMapping("/{postId}/")
+    public ResponseEntity<PostReadDto> getPost(@PathVariable @NotNull Long postId) {
+        return ResponseEntity.ok(postService.findById(postId));
     }
 
     @GetMapping(value = "/")
-    public ResponseEntity<Page<PostReadDto>> getAllPosts(
+    public ResponseEntity<PageDto<PostReadDto>> getAllPosts(
             @ModelAttribute PostSearchParamsDto postSearchParamsDto,
             @ParameterObject @PageableDefault(size = 5, page = 0, sort = {}) Pageable pageable) {
 
@@ -38,7 +40,7 @@ public class PostController {
     }
 
     @GetMapping("/{userId}")
-    public ResponseEntity<Page<PostReadDto>> getAllUserPosts(
+    public ResponseEntity<PageDto<PostReadDto>> getAllUserPosts(
             @PathVariable @NotNull Long userId,
             @ParameterObject @PageableDefault(size = 5, page = 0, sort = {}) Pageable pageable){
 
@@ -46,18 +48,19 @@ public class PostController {
     }
 
     @PostMapping("/")
-    public ResponseEntity<PostDto> create(@RequestBody PostDto postDto, @AuthenticationPrincipal User user) {
-        return ResponseEntity.ok(postService.create(postDto, user.getId()));
+    public ResponseEntity<PostDto> create(@RequestBody PostDto postDto) {
+        return ResponseEntity.ok(postService.create(postDto));
     }
 
-    @PutMapping("/{id}")
-    public ResponseEntity<PostDto> update(@RequestBody PostDto postDto, @PathVariable @NotNull Long id, @AuthenticationPrincipal User user) {
-        return ResponseEntity.ok(postService.update(postDto, id, user.getId()));
+    @PutMapping("/{postId}")
+    public ResponseEntity<PostDto> update(@RequestBody PostDto postDto,
+                                          @PathVariable @NotNull Long postId) {
+        return ResponseEntity.ok(postService.update(postDto, postId));
     }
 
-    @DeleteMapping("/{id}")
-    public ResponseEntity<PostDto> delete(@PathVariable @NotNull Long id, @AuthenticationPrincipal User user) {
-        postService.delete(id, user.getId());
+    @DeleteMapping("/{postId}")
+    public ResponseEntity<PostDto> delete(@PathVariable @NotNull Long postId) {
+        postService.delete(postId);
         return ResponseEntity.ok().build();
     }
 }
